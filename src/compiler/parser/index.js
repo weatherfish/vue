@@ -6,36 +6,38 @@ import { parseText } from './text-parser'
 import { parseFilters } from './filter-parser'
 import { cached, no, camelize } from 'shared/util'
 import { isIE, isServerRendering } from 'core/util/env'
+
 import {
-  pluckModuleFunction,
-  getAndRemoveAttr,
   addProp,
   addAttr,
+  baseWarn,
   addHandler,
   addDirective,
   getBindingAttr,
-  baseWarn
+  getAndRemoveAttr,
+  pluckModuleFunction
 } from '../helpers'
 
+export const onRE = /^@|^v-on:/
 export const dirRE = /^v-|^@|^:/
 export const forAliasRE = /(.*?)\s+(?:in|of)\s+(.*)/
 export const forIteratorRE = /\((\{[^}]*\}|[^,]*),([^,]*)(?:,([^,]*))?\)/
-const bindRE = /^:|^v-bind:/
-const onRE = /^@|^v-on:/
+
 const argRE = /:(.*)$/
+const bindRE = /^:|^v-bind:/
 const modifierRE = /\.[^.]+/g
 
 const decodeHTMLCached = cached(decode)
 
 // configurable state
 let warn
-let platformGetTagNamespace
-let platformMustUseProp
-let platformIsPreTag
-let preTransforms
-let transforms
-let postTransforms
 let delimiters
+let transforms
+let preTransforms
+let postTransforms
+let platformIsPreTag
+let platformMustUseProp
+let platformGetTagNamespace
 
 /**
  * Convert HTML string to AST.
@@ -425,7 +427,7 @@ function processComponent (el) {
 
 function processAttrs (el) {
   const list = el.attrsList
-  let i, l, name, rawName, value, arg, modifiers, isProp
+  let i, l, name, rawName, value, modifiers, isProp
   for (i = 0, l = list.length; i < l; i++) {
     name = rawName = list[i].name
     value = list[i].value
@@ -463,7 +465,8 @@ function processAttrs (el) {
         name = name.replace(dirRE, '')
         // parse arg
         const argMatch = name.match(argRE)
-        if (argMatch && (arg = argMatch[1])) {
+        const arg = argMatch && argMatch[1]
+        if (arg) {
           name = name.slice(0, -(arg.length + 1))
         }
         addDirective(el, name, rawName, value, arg, modifiers)
